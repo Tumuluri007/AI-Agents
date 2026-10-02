@@ -1,3 +1,7 @@
+from typing import List
+
+from pydantic import BaseModel, Field
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -9,6 +13,15 @@ from langchain_core.messages import HumanMessage
 from langchain_ollama import ChatOllama
 from tavily import TavilyClient
 from langchain_tavily import TavilySearch
+
+class Source(BaseModel):
+    """A source of information."""
+    url: str = Field(description = "The URL of the source.")
+
+class AgentResponse(BaseModel):
+    """schema from the agent response with answer and sources"""
+    answer: str = Field(description ="The agent answer to the query")
+    sources: List[Source] = Field(default_factory = list , description = "The sources of information used to answer the query")
 
 ##tavily = TavilyClient()
 # use tavily client to create a search tool and use in built langchain-tavily already has a search tool that can be used with the agent.
@@ -25,8 +38,8 @@ from langchain_tavily import TavilySearch
     ##return tavily.search(query= text)
 
 llm = ChatOllama(model="llama3.2", model_path="path/to/ollama/model")
-tools = [search]
-agent = create_agent(model = llm, tools=tools)
+tools = [TavilySearch()]
+agent = create_agent(model = llm, tools=tools, response_format=AgentResponse)
 
 
 def main():
